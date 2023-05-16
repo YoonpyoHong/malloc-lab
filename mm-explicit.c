@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "mm.h"
+#include "mm-explicit.h"
 #include "memlib.h"
 
 /*********************************************************
@@ -63,17 +63,15 @@ team_t team = {
 #define HDRP(bp) ((char*)(bp)- WSIZE)
 #define FTRP(bp) ((char*)(bp)+ GET_SIZE(HDRP(bp)) - DSIZE)
 
-//pred와 succ을 인식한다.
-// #define PRRP(bp) (bp)
-// #define SCRP(bp) ((char*)(bp) + WSIZE)
+//pred와 succ를 이용하여 다음 가용 노드 전 가용 노드를 찾는다
+#define NEXT_FREE(bp) (*(void**)(bp))
+#define PREV_FREE(bp) (*(void**)(bp + WSIZE))
 
 //각각 다음과 이전의 블록 포인터를 리턴한다.
 #define NEXT_BLKP(bp) ((char*)(bp) + GET_SIZE(((char*)(bp) - WSIZE)))
 #define PREV_BLKP(bp) ((char*)(bp) - GET_SIZE(((char*)(bp) - DSIZE)))
 
 static char *heap_listp;
-//next-fit
-// static char *search_bp = NULL;
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
 static void *find_fit(size_t asize);
@@ -129,13 +127,15 @@ static void *extend_heap(size_t words){
  */
 int mm_init(void)
 {
-    if((heap_listp = mem_sbrk(4*WSIZE)) == (void *) -1){
+    if((heap_listp = mem_sbrk(8*WSIZE)) == (void *) -1){
         return -1;
     }
     PUT(heap_listp, 0);
     PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1));
-    PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1));
-    PUT(heap_listp + (3*WSIZE), PACK(0, 1));
+    PUT(heap_listp + (2*WSIZE), NULL);
+    PUT(heap_listp + (3*WSIZE), NULL);
+    PUT(heap_listp + (4*WSIZE), PACK(DSIZE, 1));
+    PUT(heap_listp + (5*WSIZE), PACK(0, 1));
     heap_listp += (2*WSIZE);
 
     if(extend_heap(CHUNKSIZE/WSIZE) == NULL)

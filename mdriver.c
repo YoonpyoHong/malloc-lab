@@ -16,7 +16,8 @@
 #include <float.h>
 #include <time.h>
 
-#include "mm.h"
+// #include "mm.h"
+#include "mm-explicit.h"
 #include "memlib.h"
 #include "fsecs.h"
 #include "config.h"
